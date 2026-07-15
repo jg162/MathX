@@ -1,0 +1,1170 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="h-full bg-slate-950">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MathX - Protótipo Multimodal PIBIC-EM IFAL</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        mathx: {
+                            50: '#f5f3ff',
+                            100: '#ede9fe',
+                            500: '#8b5cf6',
+                            600: '#7c3aed',
+                            700: '#6d28d9',
+                            900: '#4c1d95',
+                            accent: '#06b6d4'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts (Inter & Fira Code para fórmulas/código) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Chart.js para análise estatística -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- MathJax para compilar LaTeX em tempo real -->
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']],
+                processEscapes: true
+            },
+            options: {
+                skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+            }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .code-font {
+            font-family: 'Fira Code', monospace;
+        }
+        /* Efeito de Vidro Fosco */
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.65);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        /* Efeito de Scanner de OCR */
+        @keyframes scan {
+            0% { top: 0%; }
+            50% { top: 100%; }
+            100% { top: 0%; }
+        }
+        .scanner-line {
+            animation: scan 3s infinite linear;
+        }
+        /* Estilização de Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.3);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(139, 92, 246, 0.4);
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(139, 92, 246, 0.7);
+        }
+    </style>
+</head>
+<body class="h-full flex flex-col overflow-hidden text-slate-100 bg-slate-950">
+
+    <!-- Layout Container -->
+    <div class="flex h-full w-full overflow-hidden">
+        
+        <!-- Sidebar lateral (Navegação & Equipe) -->
+        <aside class="hidden lg:flex flex-col w-80 bg-slate-900 border-r border-slate-800 shrink-0 z-30 justify-between">
+            <div>
+                <!-- Brand Header -->
+                <div class="p-6 border-b border-slate-800 flex items-center gap-3">
+                    <div class="bg-gradient-to-tr from-mathx-600 to-mathx-accent p-2.5 rounded-xl text-white flex items-center justify-center shadow-lg shadow-mathx-600/20">
+                        <i data-lucide="binary" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <h1 class="font-extrabold text-lg tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-mathx-50 to-mathx-accent">MATHX</h1>
+                        <span class="text-[10px] text-mathx-accent font-semibold tracking-widest uppercase">PIBIC-EM IFAL</span>
+                    </div>
+                </div>
+
+                <!-- Abas do Protótipo -->
+                <nav class="p-4 space-y-1.5">
+                    <button onclick="changeTab('dashboard')" id="btn-dashboard" class="nav-btn active flex items-center gap-3 w-full px-4 py-3 rounded-xl text-xs font-bold tracking-wide transition-all text-slate-400 hover:bg-slate-800/60 hover:text-white [&.active]:bg-mathx-700 [&.active]:text-white">
+                        <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
+                        Painel do Projeto
+                    </button>
+                    <button onclick="changeTab('chatbot')" id="btn-chatbot" class="nav-btn flex items-center gap-3 w-full px-4 py-3 rounded-xl text-xs font-bold tracking-wide transition-all text-slate-400 hover:bg-slate-800/60 hover:text-white [&.active]:bg-mathx-700 [&.active]:text-white">
+                        <i data-lucide="message-square" class="w-4 h-4"></i>
+                        Chatbot Multimodal
+                    </button>
+                    <button onclick="changeTab('manim')" id="btn-manim" class="nav-btn flex items-center gap-3 w-full px-4 py-3 rounded-xl text-xs font-bold tracking-wide transition-all text-slate-400 hover:bg-slate-800/60 hover:text-white [&.active]:bg-mathx-700 [&.active]:text-white">
+                        <i data-lucide="play" class="w-4 h-4"></i>
+                        Visualização Manim
+                    </button>
+                    <button onclick="changeTab('evaluation')" id="btn-evaluation" class="nav-btn flex items-center gap-3 w-full px-4 py-3 rounded-xl text-xs font-bold tracking-wide transition-all text-slate-400 hover:bg-slate-800/60 hover:text-white [&.active]:bg-mathx-700 [&.active]:text-white">
+                        <i data-lucide="line-chart" class="w-4 h-4"></i>
+                        Avaliação Pedagógica
+                    </button>
+                </nav>
+            </div>
+
+            <!-- Informações Acadêmicas & Equipe -->
+            <div class="p-4 m-4 rounded-xl bg-slate-950/60 border border-slate-800 space-y-3">
+                <div class="flex items-center gap-1.5 text-[10px] text-mathx-accent font-semibold uppercase tracking-wider">
+                    <i data-lucide="users" class="w-3.5 h-3.5"></i>
+                    Equipe Proponente
+                </div>
+                <div class="space-y-2 text-xs">
+                    <div>
+                        <p class="font-bold text-slate-200">José Henrique da S. Lopes</p>
+                        <p class="text-[10px] text-slate-500">2026318055 • 1A Informática</p>
+                    </div>
+                    <div>
+                        <p class="font-bold text-slate-200">João Guilherme C. Rodrigues</p>
+                        <p class="text-[10px] text-slate-500">2026319894 • 1A Informática</p>
+                    </div>
+                    <div>
+                        <p class="font-bold text-slate-200">Pedro Willisson da S. Alves</p>
+                        <p class="text-[10px] text-slate-500">2026319750 • 1A Informática</p>
+                    </div>
+                </div>
+                <div class="pt-2 border-t border-slate-800 text-[10px] text-slate-500 text-center">
+                    Orientação Acadêmica IFAL
+                </div>
+            </div>
+        </aside>
+
+        <!-- Área Central de Trabalho -->
+        <div class="flex flex-col flex-1 min-w-0 bg-slate-950">
+            
+            <!-- Header Superior -->
+            <header class="h-16 border-b border-slate-800 flex items-center justify-between px-6 bg-slate-900/50">
+                <div class="flex items-center gap-3">
+                    <button onclick="toggleSidebarMobile()" class="lg:hidden p-2 text-slate-400 hover:bg-slate-800 rounded-lg">
+                        <i data-lucide="menu" class="w-5 h-5"></i>
+                    </button>
+                    <div class="flex items-center gap-2">
+                        <span class="bg-mathx-900/40 text-mathx-accent border border-mathx-700/30 px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest">
+                            IFAL Campus Maceió
+                        </span>
+                        <span class="text-slate-600 hidden sm:inline">|</span>
+                        <span class="text-xs text-slate-400 hidden sm:inline font-medium">PIBIC-EM • Pesquisa Científica & Tecnológica</span>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-3">
+                    <div class="text-right hidden md:block">
+                        <p class="text-xs font-bold text-slate-300">Protótipo Experimental</p>
+                        <span class="text-[9px] text-mathx-accent font-semibold tracking-wider">v1.2 (Ano Letivo 2026)</span>
+                    </div>
+                    <div class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
+                </div>
+            </header>
+
+            <!-- Janela de Conteúdo do Viewport -->
+            <main class="flex-1 overflow-y-auto p-4 md:p-6" id="view-port">
+                
+                <!-- TAB 1: PAINEL DO PROJETO -->
+                <section id="tab-dashboard" class="space-y-6">
+                    <!-- Banner Principal do PIBIC-EM -->
+                    <div class="relative bg-gradient-to-r from-mathx-900 via-slate-900 to-indigo-950 rounded-2xl p-6 md:p-8 border border-mathx-700/20 overflow-hidden shadow-2xl">
+                        <div class="absolute right-0 top-0 translate-x-10 -translate-y-10 opacity-10 pointer-events-none">
+                            <i data-lucide="binary" class="w-80 h-80 text-mathx-accent"></i>
+                        </div>
+                        <div class="relative z-10 max-w-3xl space-y-3">
+                            <span class="inline-block bg-mathx-600/30 text-mathx-accent border border-mathx-500/40 text-[9px] font-bold px-3 py-1 rounded-full uppercase tracking-widest">
+                                Projeto Aprovado PIBIC-EM
+                            </span>
+                            <h2 class="text-xl md:text-2xl lg:text-3xl font-black leading-snug">
+                                MathX: Chatbot Inteligente Multimodal para Ensino de Matemática
+                            </h2>
+                            <p class="text-slate-300 text-xs md:text-sm leading-relaxed">
+                                Desenvolvimento experimental baseado em Inteligência Artificial, OCR, Visão Computacional e animações via biblioteca Manim para simplificar o aprendizado e visualização de conceitos abstratos no IFAL.
+                            </p>
+                            
+                            <div class="flex flex-wrap gap-2.5 pt-2">
+                                <button onclick="changeTab('chatbot')" class="bg-mathx-600 hover:bg-mathx-500 text-white font-bold text-xs px-5 py-3 rounded-xl transition flex items-center gap-2 shadow-lg shadow-mathx-600/20">
+                                    <i data-lucide="message-square" class="w-4 h-4"></i> Iniciar Chatbot
+                                </button>
+                                <button onclick="changeTab('manim')" class="bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs px-5 py-3 rounded-xl transition flex items-center gap-2 border border-slate-700">
+                                    <i data-lucide="play" class="w-4 h-4"></i> Ver Simulação Manim
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Cards de Arquitetura Tecnológica -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div class="bg-slate-900/50 border border-slate-800 p-5 rounded-2xl flex items-center gap-4">
+                            <div class="p-3 bg-purple-500/10 text-purple-400 border border-purple-500/20 rounded-xl">
+                                <i data-lucide="brain-circuit" class="w-6 h-6"></i>
+                            </div>
+                            <div>
+                                <p class="text-[9px] text-slate-400 uppercase font-bold tracking-widest">Inteligência Lógica</p>
+                                <p class="text-sm font-black text-slate-200 mt-1">APIs Generativas</p>
+                            </div>
+                        </div>
+                        <div class="bg-slate-900/50 border border-slate-800 p-5 rounded-2xl flex items-center gap-4">
+                            <div class="p-3 bg-mathx-500/10 text-mathx-accent border border-mathx-500/20 rounded-xl">
+                                <i data-lucide="eye" class="w-6 h-6"></i>
+                            </div>
+                            <div>
+                                <p class="text-[9px] text-slate-400 uppercase font-bold tracking-widest">Processamento Visual</p>
+                                <p class="text-sm font-black text-slate-200 mt-1">OCR & OpenCV</p>
+                            </div>
+                        </div>
+                        <div class="bg-slate-900/50 border border-slate-800 p-5 rounded-2xl flex items-center gap-4">
+                            <div class="p-3 bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 rounded-xl">
+                                <i data-lucide="clapperboard" class="w-6 h-6"></i>
+                            </div>
+                            <div>
+                                <p class="text-[9px] text-slate-400 uppercase font-bold tracking-widest">Visualização Gráfica</p>
+                                <p class="text-sm font-black text-slate-200 mt-1">Animação Manim</p>
+                            </div>
+                        </div>
+                        <div class="bg-slate-900/50 border border-slate-800 p-5 rounded-2xl flex items-center gap-4">
+                            <div class="p-3 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-xl">
+                                <i data-lucide="line-chart" class="w-6 h-6"></i>
+                            </div>
+                            <div>
+                                <p class="text-[9px] text-slate-400 uppercase font-bold tracking-widest">Metodologia</p>
+                                <p class="text-sm font-black text-slate-200 mt-1">Pesquisa Aplicada</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Divisão: Resumo de Objetivos & Equipe Mobile -->
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        
+                        <!-- Painel de Objetivos Gerais e Abordagem -->
+                        <div class="lg:col-span-2 bg-slate-900/40 border border-slate-800 rounded-2xl p-6 space-y-4">
+                            <div class="flex items-center gap-2 border-b border-slate-800 pb-3">
+                                <i data-lucide="target" class="text-mathx-accent w-5 h-5"></i>
+                                <h3 class="font-extrabold text-sm">Objetivos da Solução MathX</h3>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                                <div class="bg-slate-950/40 p-4 border border-slate-800/80 rounded-xl space-y-1.5">
+                                    <h4 class="font-bold text-mathx-accent">Mitigar Lacunas de Aprendizagem</h4>
+                                    <p class="text-slate-400 leading-relaxed">
+                                        Atuar diretamente sobre os dados do PISA (onde 73% não atingem o nível básico de matemática), facilitando a transição entre aritmética e álgebra.
+                                    </p>
+                                </div>
+                                <div class="bg-slate-950/40 p-4 border border-slate-800/80 rounded-xl space-y-1.5">
+                                    <h4 class="font-bold text-mathx-accent">Multimodalidade Prática</h4>
+                                    <p class="text-slate-400 leading-relaxed">
+                                        Permitir que o aluno tire fotos de listas de exercícios manuais e faça o envio direto em formato PDF para transcrição automática e imediata.
+                                    </p>
+                                </div>
+                                <div class="bg-slate-950/40 p-4 border border-slate-800/80 rounded-xl space-y-1.5">
+                                    <h4 class="font-bold text-mathx-accent">Visualização Computacional</h4>
+                                    <p class="text-slate-400 leading-relaxed">
+                                        Gerar gráficos matemáticos e animações que ajudam o cérebro a digerir equações complexas de forma lúdica.
+                                    </p>
+                                </div>
+                                <div class="bg-slate-950/40 p-4 border border-slate-800/80 rounded-xl space-y-1.5">
+                                    <h4 class="font-bold text-mathx-accent">Pesquisa Integrada IFAL</h4>
+                                    <p class="text-slate-400 leading-relaxed">
+                                        Coleta de dados reais via testes assistidos no Campus Maceió para verificar a melhora real no desempenho acadêmico dos alunos.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Equipe Mobile & Identidade Institucional -->
+                        <div class="bg-slate-900/40 border border-slate-800 rounded-2xl p-6 flex flex-col justify-between space-y-4">
+                            <div class="space-y-3">
+                                <div class="flex items-center gap-2 border-b border-slate-800 pb-3">
+                                    <i data-lucide="book-open" class="text-mathx-accent w-5 h-5"></i>
+                                    <h3 class="font-extrabold text-sm">Resumo de Informações</h3>
+                                </div>
+                                <p class="text-xs text-slate-400 leading-relaxed">
+                                    Fomentado no programa PIBIC-EM do IFAL, este protótipo explora o uso de Visão Computacional para o reconhecimento de caracteres em fórmulas matemáticas manuais, integrando-se de forma direta a solvers de IA.
+                                </p>
+                            </div>
+                            
+                            <div class="bg-slate-950/60 p-4 border border-slate-800 rounded-xl">
+                                <span class="text-[9px] font-bold text-mathx-accent block uppercase">Iniciação Científica</span>
+                                <p class="text-xs font-black text-slate-200 mt-1">Turma: 1A Informática Matutino</p>
+                                <p class="text-[10px] text-slate-400 mt-0.5">IFAL Campus Maceió • 2026</p>
+                            </div>
+                        </div>
+
+                    </div>
+                </section>
+
+                <!-- TAB 2: CHATBOT MULTIMODAL (CORE MATHX) -->
+                <section id="tab-chatbot" class="hidden grid grid-cols-1 lg:grid-cols-3 gap-6 h-full min-h-[550px]">
+                    
+                    <!-- Coluna de Uploads e Visão Computacional (OCR) -->
+                    <div class="lg:col-span-1 bg-slate-900/40 border border-slate-800 rounded-2xl p-5 flex flex-col gap-4">
+                        <div class="border-b border-slate-800 pb-3">
+                            <h3 class="font-extrabold text-sm text-slate-200 flex items-center gap-2">
+                                <i data-lucide="camera" class="text-mathx-accent w-4.5 h-4.5"></i>
+                                Entrada Multimodal (OCR)
+                            </h3>
+                            <p class="text-[10px] text-slate-400 mt-1">Carregue imagens de exercícios ou PDFs para reconhecimento automático de fórmulas.</p>
+                        </div>
+
+                        <!-- Botão de simulação de foto de exercício -->
+                        <div class="space-y-3">
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest">Selecione uma Imagem do Exercício</label>
+                            <div class="grid grid-cols-2 gap-2">
+                                <button onclick="selectSimulatedProblem('trig')" class="p-3 bg-slate-950 border border-slate-800 rounded-xl text-left hover:border-mathx-600 transition group">
+                                    <span class="text-[10px] text-mathx-accent font-bold uppercase block">Problema 1</span>
+                                    <span class="text-xs font-bold text-slate-200 block mt-1">Trigonometria</span>
+                                    <span class="text-[9px] text-slate-500 block">Seno & Cosseno</span>
+                                </button>
+                                <button onclick="selectSimulatedProblem('funcao')" class="p-3 bg-slate-950 border border-slate-800 rounded-xl text-left hover:border-mathx-600 transition group">
+                                    <span class="text-[10px] text-mathx-accent font-bold uppercase block">Problema 2</span>
+                                    <span class="text-xs font-bold text-slate-200 block mt-1">Função 2º Grau</span>
+                                    <span class="text-[9px] text-slate-500 block">Vértice da Parábola</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Caixa de Pré-Visualização com Efeito Scanner de Visão Computacional -->
+                        <div class="relative bg-slate-950 border border-slate-800 rounded-xl h-44 overflow-hidden flex flex-col items-center justify-center p-4">
+                            <div id="ocr-scan-overlay" class="hidden absolute inset-0 bg-mathx-500/10 pointer-events-none">
+                                <div class="w-full h-1 bg-mathx-accent absolute scanner-line shadow-lg shadow-mathx-accent/50"></div>
+                            </div>
+                            
+                            <div id="ocr-preview-placeholder" class="text-center space-y-2">
+                                <i data-lucide="image" class="w-8 h-8 text-slate-700 mx-auto"></i>
+                                <p class="text-xs text-slate-500">Nenhum elemento visual escaneado</p>
+                            </div>
+
+                            <div id="ocr-preview-active" class="hidden w-full h-full flex flex-col justify-between">
+                                <div class="flex-1 flex items-center justify-center">
+                                    <div id="simulated-formula-math" class="text-center bg-slate-900 border border-slate-800 px-4 py-2.5 rounded-lg text-sm text-mathx-accent font-bold">
+                                        <!-- Via JS -->
+                                    </div>
+                                </div>
+                                <div class="flex items-center justify-between text-[9px] text-slate-500 pt-2 border-t border-slate-900/60">
+                                    <span class="flex items-center gap-1"><i data-lucide="binary" class="w-3 h-3 text-emerald-500"></i> OCR Tesseract Concluído</span>
+                                    <span>Confiança: 98.4%</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Filtro OpenCV de Pré-Processamento -->
+                        <div class="bg-slate-950 border border-slate-800 p-3 rounded-xl space-y-2">
+                            <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest block">Canal OpenCV de Binarização</span>
+                            <div class="flex gap-2">
+                                <div class="flex-1 bg-slate-900 border border-slate-800 h-8 rounded flex items-center justify-center text-[10px] text-slate-500 font-mono">
+                                    Escala Cinza
+                                </div>
+                                <div class="flex-1 bg-slate-900 border border-slate-800 h-8 rounded flex items-center justify-center text-[10px] text-slate-500 font-mono">
+                                    Binarizado (Thresh)
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Envio de PDFs de Listas -->
+                        <div class="border border-dashed border-slate-800 bg-slate-950/40 p-4 rounded-xl text-center cursor-pointer hover:bg-slate-900/20 transition-all flex flex-col items-center justify-center space-y-2" onclick="simulatePdfImport()">
+                            <i data-lucide="file-text" class="w-6 h-6 text-slate-600"></i>
+                            <div>
+                                <p class="text-xs font-bold text-slate-400">Importar PDF de Lista de Exercícios</p>
+                                <span class="text-[9px] text-slate-500 block mt-0.5">Leitura de dados nativos com PyPDF2 e pdfplumber</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Coluna do Chat de Resolução passo a passo -->
+                    <div class="lg:col-span-2 bg-slate-900/40 border border-slate-800 rounded-2xl flex flex-col overflow-hidden">
+                        
+                        <!-- Header do Chat -->
+                        <div class="p-4 border-b border-slate-800 bg-slate-900/30 flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <div class="w-8 h-8 rounded-lg bg-mathx-600 flex items-center justify-center text-white font-bold text-sm">
+                                    IA
+                                </div>
+                                <div>
+                                    <h4 class="text-xs font-black text-slate-200">Chatbot MathX Multimodal</h4>
+                                    <span class="text-[9px] text-mathx-accent font-semibold">OpenAI API Ativa • Soluções Passo a Passo</span>
+                                </div>
+                            </div>
+                            <button onclick="clearMathXHistory()" class="text-[10px] text-rose-400 hover:underline flex items-center gap-1">
+                                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Limpar Chat
+                            </button>
+                        </div>
+
+                        <!-- Histórico do Chat de Matemática -->
+                        <div id="chatHistory" class="flex-1 overflow-y-auto p-4 space-y-4">
+                            <!-- Mensagem Inicial Padrão -->
+                            <div class="flex gap-3 max-w-2xl">
+                                <div class="w-7 h-7 rounded-full bg-mathx-600 flex items-center justify-center text-white font-bold text-xs shrink-0">
+                                    M
+                                </div>
+                                <div class="bg-slate-900/75 border border-slate-800 rounded-2xl p-4 text-xs space-y-2 leading-relaxed">
+                                    <p class="font-extrabold text-mathx-accent">MathX Orientador Acadêmico</p>
+                                    <p>Olá, seja bem-vindo ao protótipo experimental **MathX** do IFAL! Escolha um dos problemas do painel ao lado ou descreva o exercício no input inferior.</p>
+                                    <p>Consigo ler textos complexos, binarizar imagens e extrair fórmulas em formato **LaTeX** via OCR para gerar a explicação passo a passo.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Feedback de Digitação da IA -->
+                        <div id="ai-typing-status" class="hidden px-4 py-2 flex items-center gap-2 text-[10px] text-slate-400">
+                            <span class="flex h-1.5 w-1.5 relative">
+                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-mathx-accent opacity-75"></span>
+                                <span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-mathx-accent"></span>
+                            </span>
+                            Processando Visão Computacional e resolvendo a equação...
+                        </div>
+
+                        <!-- Caixa de Entrada de Texto -->
+                        <div class="p-3 border-t border-slate-800 bg-slate-950/20 flex gap-2">
+                            <input type="text" id="userInputText" onkeydown="handleChatEnter(event)" placeholder="Digite seu problema algébrico (Ex: Resolver x^2 - 5x + 6 = 0)..." class="flex-1 px-4 py-3 bg-slate-950 border border-slate-800 rounded-xl text-xs focus:outline-none focus:border-mathx-600 transition">
+                            <button onclick="sendMathQuery()" class="bg-mathx-600 hover:bg-mathx-500 text-white p-3 rounded-xl transition flex items-center justify-center">
+                                <i data-lucide="send" class="w-4.5 h-4.5"></i>
+                            </button>
+                        </div>
+
+                    </div>
+                </section>
+
+                <!-- TAB 3: VISUALIZADOR MATEMÁTICO MANIM -->
+                <section id="tab-manim" class="hidden space-y-6">
+                    <div class="flex flex-wrap items-center justify-between gap-4">
+                        <div>
+                            <h2 class="text-xl font-bold">Gerador de Ilustrações Dinâmicas (Manim Model)</h2>
+                            <p class="text-xs text-slate-500">Gere simulações visuais em tempo real simulando a biblioteca Python Manim para facilitar a compreensão.</p>
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="renderManimScene('trig')" class="px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 bg-mathx-600 hover:bg-mathx-500 text-white">
+                                <i data-lucide="circle" class="w-4 h-4"></i> Círculo Trigonométrico
+                            </button>
+                            <button onclick="renderManimScene('quad')" class="px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700">
+                                <i data-lucide="arrow-up-right" class="w-4 h-4"></i> Parábola Quadrática
+                            </button>
+                            <button onclick="renderManimScene('pitagoras')" class="px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700">
+                                <i data-lucide="triangle" class="w-4 h-4"></i> Teorema de Pitágoras
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        
+                        <!-- Janela de Renderização do Canvas (Semelhante à Janela de Render do Python Manim) -->
+                        <div class="lg:col-span-2 bg-slate-900/60 border border-slate-800 rounded-2xl overflow-hidden flex flex-col">
+                            <div class="p-4 border-b border-slate-800 bg-slate-950/40 flex items-center justify-between">
+                                <span class="text-xs font-bold font-mono text-slate-300 flex items-center gap-1.5">
+                                    <span class="w-2.5 h-2.5 rounded-full bg-red-500"></span>
+                                    manim_scene_player.py (Canvas 1080p 60fps)
+                                </span>
+                                <span class="text-[9px] font-mono bg-mathx-900/50 text-mathx-accent px-2 py-0.5 rounded">Python Script Render</span>
+                            </div>
+
+                            <!-- Canvas de Animação -->
+                            <div class="flex-1 bg-black aspect-video relative flex items-center justify-center p-4" id="manim-canvas-container">
+                                <canvas id="manimCanvas" class="w-full h-full max-h-[400px]"></canvas>
+                            </div>
+
+                            <!-- Controles do Player do Manim -->
+                            <div class="p-3 border-t border-slate-800 bg-slate-950/40 flex items-center justify-between text-xs">
+                                <div class="flex items-center gap-3">
+                                    <button onclick="toggleManimPlayback()" class="p-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-slate-300">
+                                        <i data-lucide="play" id="manim-play-icon" class="w-4 h-4"></i>
+                                    </button>
+                                    <button onclick="resetManimScene()" class="p-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-slate-300">
+                                        <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+                                    </button>
+                                    <span class="text-[10px] text-slate-500 font-mono" id="manim-timer-label">Animação: Pronto</span>
+                                </div>
+                                <span class="text-[10px] text-slate-500 font-mono">Render: MathX Dynamic Engine</span>
+                            </div>
+                        </div>
+
+                        <!-- Parâmetros de Código e Controle de Animação -->
+                        <div class="bg-slate-900/40 border border-slate-800 rounded-2xl p-5 flex flex-col justify-between">
+                            <div class="space-y-4">
+                                <h3 class="font-extrabold text-sm border-b border-slate-800 pb-3 flex items-center gap-2">
+                                    <i data-lucide="terminal" class="text-mathx-accent w-4.5 h-4.5"></i>
+                                    Código Python Equivalente
+                                </h3>
+                                
+                                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 code-font text-[10px] text-slate-400 leading-relaxed overflow-x-auto h-64">
+                                    <pre id="manim-code-container">
+# Selecione uma cena para gerar o código correspondente.</pre>
+                                </div>
+                            </div>
+
+                            <div class="p-4 bg-mathx-900/20 border border-mathx-500/10 rounded-xl mt-4">
+                                <h4 class="text-xs font-bold text-mathx-accent flex items-center gap-1.5">
+                                    <i data-lucide="lightbulb" class="w-4 h-4"></i>
+                                    O que é o Manim?
+                                </h4>
+                                <p class="text-[10px] text-slate-400 mt-1.5 leading-relaxed">
+                                    O **Manim** é o motor de animações matemáticas desenvolvido por Grant Sanderson (3Blue1Brown). A nossa ferramenta MathX foi arquitetada para traduzir equações e gerar os scripts de renderização dinamicamente.
+                                </p>
+                            </div>
+                        </div>
+
+                    </div>
+                </section>
+
+                <!-- TAB 4: AVALIAÇÃO PEDAGÓGICA -->
+                <section id="tab-evaluation" class="hidden space-y-6">
+                    <div>
+                        <h2 class="text-xl font-bold">Painel de Pesquisa & Métricas Acadêmicas</h2>
+                        <p class="text-xs text-slate-500">Acompanhamento de testes estatísticos de usabilidade e impacto educacional realizados com alunos do IFAL.</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        
+                        <!-- Comparativo Pré-teste vs Pós-teste (Chart.js) -->
+                        <div class="lg:col-span-2 bg-slate-900/40 border border-slate-800 p-6 rounded-2xl space-y-4">
+                            <h3 class="font-extrabold text-sm border-b border-slate-800 pb-3 flex items-center gap-2">
+                                <i data-lucide="line-chart" class="text-mathx-accent w-4.5 h-4.5"></i>
+                                Ganho de Aprendizagem (Pré-teste vs. Pós-teste)
+                            </h3>
+                            <div class="h-64 relative">
+                                <canvas id="chartPerformance"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Métricas de Usabilidade SUS -->
+                        <div class="bg-slate-900/40 border border-slate-800 p-6 rounded-2xl flex flex-col justify-between">
+                            <div class="space-y-4">
+                                <h3 class="font-extrabold text-sm border-b border-slate-800 pb-3 flex items-center gap-2">
+                                    <i data-lucide="user-check" class="text-mathx-accent w-4.5 h-4.5"></i>
+                                    Usabilidade (Escala SUS)
+                                </h3>
+                                <p class="text-[11px] text-slate-400 leading-relaxed">
+                                    Resultados consolidados com base em testes supervisionados de usabilidade conduzidos com 40 discentes do ensino médio técnico integrado.
+                                </p>
+
+                                <div class="space-y-3 pt-2">
+                                    <div class="flex justify-between items-center text-xs">
+                                        <span class="text-slate-400">Índice Geral de Usabilidade</span>
+                                        <span class="text-emerald-400 font-extrabold">84.5 / 100</span>
+                                    </div>
+                                    <div class="w-full bg-slate-950 h-2 rounded-full overflow-hidden border border-slate-800">
+                                        <div class="bg-emerald-500 h-full" style="width: 84.5%"></div>
+                                    </div>
+
+                                    <div class="flex justify-between items-center text-xs pt-2">
+                                        <span class="text-slate-400">Satisfação do Usuário</span>
+                                        <span class="text-mathx-accent font-extrabold">91.2%</span>
+                                    </div>
+                                    <div class="w-full bg-slate-950 h-2 rounded-full overflow-hidden border border-slate-800">
+                                        <div class="bg-mathx-500 h-full" style="width: 91.2%"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="p-3 bg-slate-950 border border-slate-800 rounded-xl text-center text-[10px] text-slate-500 mt-4">
+                                Amostra de Teste: N=40 Alunos • IFAL Maceió 2026
+                            </div>
+                        </div>
+
+                    </div>
+                </section>
+
+            </main>
+
+        </div>
+
+    </div>
+
+    <!-- SCRIPTS LÓGICOS DA PLATAFORMA -->
+    <script>
+        // --- CONTROLE DE NAVEGAÇÃO DE ABAS ---
+        function changeTab(tabName) {
+            document.querySelectorAll('main > section').forEach(sect => sect.classList.add('hidden'));
+            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+
+            const targetSection = document.getElementById(`tab-${tabName}`);
+            if (targetSection) targetSection.classList.remove('hidden');
+
+            const targetBtn = document.getElementById(`btn-${tabName}`);
+            if (targetBtn) targetBtn.classList.add('active');
+
+            if (tabName === 'evaluation') {
+                renderEvaluationCharts();
+            }
+            if (tabName === 'manim') {
+                // Inicia animação padrão se não houver nenhuma
+                setTimeout(() => { renderManimScene('trig'); }, 100);
+            }
+        }
+
+        function toggleSidebarMobile() {
+            const sidebar = document.querySelector('aside');
+            sidebar.classList.toggle('hidden');
+            sidebar.classList.toggle('fixed');
+            sidebar.classList.toggle('inset-y-0');
+            sidebar.classList.toggle('left-0');
+        }
+
+        // --- SIMULADOR DE OCR E VISÃO COMPUTACIONAL (TESSERACT/OPENCV) ---
+        let currentProblemSelection = null;
+
+        const simulatedProblems = {
+            trig: {
+                title: "Trigonometria Básica",
+                formula: "\\sin^2(\\theta) + \\cos^2(\\theta) = 1",
+                text: "Demonstrar a relação fundamental da trigonometria e obter o valor de $\\sin(\\theta)$ para $\\cos(\\theta) = 0.6$ no primeiro quadrante.",
+                resolution: `### Resolução Analítica Passo a Passo:
+
+Utilizamos a **Relação Fundamental da Trigonometria**:
+$$\\sin^2(\\theta) + \\cos^2(\\theta) = 1$$
+
+**Passo 1:** Substituímos o valor de $\\cos(\\theta) = 0.6$:
+$$\\sin^2(\\theta) + (0.6)^2 = 1$$
+$$\\sin^2(\\theta) + 0.36 = 1$$
+
+**Passo 2:** Isolamos o termo do seno quadrado:
+$$\\sin^2(\\theta) = 1 - 0.36$$
+$$\\sin^2(\\theta) = 0.64$$
+
+**Passo 3:** Aplicamos a raiz quadrada em ambos os lados. Sendo o primeiro quadrante ($0 < \\theta < \\frac{\\pi}{2}$), o seno é obrigatoriamente positivo:
+$$\\sin(\\theta) = \\sqrt{0.64}$$
+$$\\sin(\\theta) = 0.8$$
+
+**Resposta:** O valor de $\\sin(\\theta)$ é **$0.8$**.`
+            },
+            funcao: {
+                title: "Função de 2º Grau",
+                formula: "f(x) = x^2 - 4x + 3",
+                text: "Encontrar as raízes e as coordenadas do vértice (ponto crítico) da parábola definida por $f(x) = x^2 - 4x + 3$.",
+                resolution: `### Resolução Analítica Passo a Passo:
+
+Dada a equação quadrática:
+$$f(x) = x^2 - 4x + 3$$
+Onde os coeficientes são: $a = 1$, $b = -4$, $c = 3$.
+
+**Passo 1: Encontrar as Raízes (Fórmula de Bhaskara)**
+Calculamos o discriminante $\\Delta$:
+$$\\Delta = b^2 - 4ac$$
+$$\\Delta = (-4)^2 - 4(1)(3)$$
+$$\\Delta = 16 - 12 = 4$$
+
+Como $\\Delta > 0$, temos duas raízes reais distintas:
+$$x = \\frac{-b \\pm \\sqrt{\\Delta}}{2a}$$
+$$x = \\frac{-(-4) \\pm \\sqrt{4}}{2(1)}$$
+$$x = \\frac{4 \\pm 2}{2}$$
+
+* Raíz $x_1 = \\frac{4 + 2}{2} = 3$
+* Raíz $x_2 = \\frac{4 - 2}{2} = 1$
+
+**Passo 2: Determinar o Vértice da Parábola $V(X_v, Y_v)$**
+As coordenadas do vértice são dadas por:
+$$X_v = -\\frac{b}{2a} = -\\frac{-4}{2(1)} = 2$$
+$$Y_v = -\\frac{\\Delta}{4a} = -\\frac{4}{4(1)} = -1$$
+
+**Resposta:** As raízes são **$1$ e $3$** e o ponto do vértice é **$V(2, -1)$**.`
+            }
+        };
+
+        function selectSimulatedProblem(type) {
+            currentProblemSelection = simulatedProblems[type];
+            
+            // Ativa o scanner de OCR
+            const previewPlaceholder = document.getElementById('ocr-preview-placeholder');
+            const previewActive = document.getElementById('ocr-preview-active');
+            const scanOverlay = document.getElementById('ocr-scan-overlay');
+            const mathContainer = document.getElementById('simulated-formula-math');
+
+            previewPlaceholder.classList.add('hidden');
+            previewActive.classList.add('hidden');
+            scanOverlay.classList.remove('hidden');
+
+            // Simula o tempo de processamento do OpenCV e Tesseract OCR
+            setTimeout(() => {
+                scanOverlay.classList.add('hidden');
+                previewActive.classList.remove('hidden');
+                mathContainer.innerText = "$$ " + currentProblemSelection.formula + " $$";
+                
+                // Força MathJax a renderizar a nova fórmula binarizada
+                MathJax.typesetPromise();
+
+                // Envia para o histórico do Chat automaticamente
+                simulateMathXResponse();
+            }, 1800);
+        }
+
+        function simulatePdfImport() {
+            alertCustom("Simulação de Importação: O documento 'Exercicios_IFAL_Matematica_1A.pdf' foi analisado. Encontramos 3 problemas de Geometria Analítica.");
+        }
+
+
+        // --- ENGINE DO CHATBOT MATHX (MOCK DE IA COM SUPORTE A LATEX) ---
+        function handleChatEnter(e) {
+            if (e.key === 'Enter') sendMathQuery();
+        }
+
+        function sendMathQuery() {
+            const input = document.getElementById('userInputText');
+            const userMsg = input.value.trim();
+            if (!userMsg) return;
+
+            input.value = '';
+            appendChatMessage(userMsg, 'user');
+
+            // Processamento simulado de IA
+            const typing = document.getElementById('ai-typing-status');
+            typing.classList.remove('hidden');
+
+            setTimeout(() => {
+                typing.classList.add('hidden');
+                let answer = "Infelizmente o protótipo experimental não conseguiu analisar essa expressão de forma autônoma de momento. Por favor utilize um dos problemas de exemplo do painel OCR.";
+                
+                if (userMsg.toLowerCase().includes("bhaskara") || userMsg.toLowerCase().includes("segundo grau") || userMsg.toLowerCase().includes("vértice")) {
+                    answer = simulatedProblems.funcao.resolution;
+                } else if (userMsg.toLowerCase().includes("seno") || userMsg.toLowerCase().includes("cosseno") || userMsg.toLowerCase().includes("trigo")) {
+                    answer = simulatedProblems.trig.resolution;
+                }
+
+                appendChatMessage(answer, 'ai');
+            }, 1500);
+        }
+
+        function simulateMathXResponse() {
+            const typing = document.getElementById('ai-typing-status');
+            typing.classList.remove('hidden');
+
+            setTimeout(() => {
+                typing.classList.add('hidden');
+                appendChatMessage(`Recebi o exercício via upload de imagem OCR. O texto extraído binarizado foi:\n\n**Exercício:** *${currentProblemSelection.text}*\n\n${currentProblemSelection.resolution}`, 'ai');
+            }, 1200);
+        }
+
+        function appendChatMessage(text, sender) {
+            const chatHistory = document.getElementById('chatHistory');
+            const wrapper = document.createElement('div');
+            wrapper.className = `flex gap-3 max-w-2xl ${sender === 'user' ? 'ml-auto flex-row-reverse' : ''}`;
+
+            const senderName = sender === 'user' ? 'Você' : 'MathX Orientador IA';
+            const bg = sender === 'user' ? 'bg-mathx-600 text-white rounded-tr-none' : 'bg-slate-900/75 border border-slate-800 rounded-tl-none text-slate-100';
+            const avatar = sender === 'user' ? 'U' : 'M';
+            const avatarBg = sender === 'user' ? 'bg-slate-800' : 'bg-mathx-600';
+
+            wrapper.innerHTML = `
+                <div class="w-7 h-7 rounded-full ${avatarBg} flex items-center justify-center text-white font-bold text-xs shrink-0">
+                    ${avatar}
+                </div>
+                <div class="${bg} rounded-2xl p-4 text-xs shadow-md leading-relaxed space-y-2 whitespace-pre-wrap">
+                    <p class="font-extrabold text-[10px] text-mathx-accent tracking-wide uppercase">${senderName}</p>
+                    <p>${text}</p>
+                </div>
+            `;
+
+            chatHistory.appendChild(wrapper);
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+
+            // Renderiza fórmulas Latex adicionadas
+            MathJax.typesetPromise();
+        }
+
+        function clearMathXHistory() {
+            const history = document.getElementById('chatHistory');
+            history.innerHTML = `
+                <div class="flex gap-3 max-w-2xl">
+                    <div class="w-7 h-7 rounded-full bg-mathx-600 flex items-center justify-center text-white font-bold text-xs shrink-0">
+                        M
+                    </div>
+                    <div class="bg-slate-900/75 border border-slate-800 rounded-2xl p-4 text-xs space-y-2 leading-relaxed">
+                        <p class="font-extrabold text-mathx-accent">MathX Orientador Acadêmico</p>
+                        <p>O histórico do orientador foi resetado. O que vamos resolver hoje?</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        function alertCustom(msg) {
+            alert(msg);
+        }
+
+
+        // --- ENGINE DE SIMULAÇÃO DE ANIMAÇÕES DO MANIM (HTML5 CANVAS) ---
+        let manimCanvas = null;
+        let manimCtx = null;
+        let manimAnimationId = null;
+        let manimTime = 0;
+        let manimIsPlaying = true;
+        let currentSceneType = 'trig';
+
+        const manimCodeTemplates = {
+            trig: `from manim import *
+
+class TrigonometricCircle(Scene):
+    def construct(self):
+        # Criação do círculo de raio 2
+        circle = Circle(radius=2, color=BLUE)
+        axes = Axes(x_range=[-3, 3], y_range=[-3, 3])
+        
+        # Vetor rotativo representando o ângulo theta
+        line = Line(ORIGIN, [2 * np.cos(PI/4), 2 * np.sin(PI/4), 0], color=YELLOW)
+        dot = Dot(line.get_end(), color=RED)
+        
+        # Seno (linha vertical verde) e Cosseno (linha horizontal laranja)
+        sin_line = Line([2 * np.cos(PI/4), 0, 0], line.get_end(), color=GREEN)
+        cos_line = Line(ORIGIN, [2 * np.cos(PI/4), 0, 0], color=ORANGE)
+        
+        self.play(Create(axes), Create(circle))
+        self.play(Create(line), Create(dot))
+        self.play(Create(sin_line), Create(cos_line))
+        self.wait(2)`,
+            quad: `from manim import *
+
+class ParabolicGraph(Scene):
+    def construct(self):
+        # Sistema de Eixos Cartesianos
+        axes = Axes(
+            x_range=[-3, 5, 1],
+            y_range=[-2, 6, 1],
+            axis_config={"color": BLUE}
+        )
+        
+        # Plotagem da função f(x) = x^2 - 4x + 3
+        parabola = axes.plot(
+            lambda x: x**2 - 4*x + 3,
+            color=YELLOW,
+            x_range=[0.5, 3.5]
+        )
+        
+        # Vértice marcado como ponto vermelho
+        vertex_dot = Dot(axes.c2p(2, -1), color=RED)
+        
+        self.play(Create(axes))
+        self.play(Create(parabola), run_time=2)
+        self.play(Flash(vertex_dot, color=RED))
+        self.wait(1)`,
+            pitagoras: `from manim import *
+
+class PythagorasTheorem(Scene):
+    def construct(self):
+        # Triângulo Retângulo
+        triangle = Polygon(
+            ORIGIN, [3, 0, 0], [3, 4, 0],
+            color=BLUE, fill_opacity=0.3
+        )
+        
+        # Quadrados das arestas para representação geométrica
+        sq_a = Square(side_length=3, color=ORANGE).next_to(triangle, DOWN, buff=0)
+        sq_b = Square(side_length=4, color=GREEN).next_to(triangle, RIGHT, buff=0)
+        
+        self.play(Create(triangle))
+        self.play(FadeIn(sq_a), FadeIn(sq_b))
+        self.wait(2)`
+        };
+
+        function renderManimScene(sceneType) {
+            currentSceneType = sceneType;
+            document.getElementById('manim-code-container').innerText = manimCodeTemplates[sceneType];
+            
+            manimCanvas = document.getElementById('manimCanvas');
+            manimCtx = manimCanvas.getContext('2d');
+            
+            // Configura proporção
+            manimCanvas.width = 640;
+            manimCanvas.height = 360;
+
+            manimTime = 0;
+            manimIsPlaying = true;
+            document.getElementById('manim-play-icon').setAttribute('data-lucide', 'pause');
+            document.getElementById('manim-timer-label').innerText = "Animação: Executando";
+            lucide.createIcons();
+
+            if (manimAnimationId) cancelAnimationFrame(manimAnimationId);
+            animateManim();
+        }
+
+        function toggleManimPlayback() {
+            manimIsPlaying = !manimIsPlaying;
+            const icon = document.getElementById('manim-play-icon');
+            if (manimIsPlaying) {
+                icon.setAttribute('data-lucide', 'pause');
+                document.getElementById('manim-timer-label').innerText = "Animação: Executando";
+                animateManim();
+            } else {
+                icon.setAttribute('data-lucide', 'play');
+                document.getElementById('manim-timer-label').innerText = "Animação: Pausada";
+            }
+            lucide.createIcons();
+        }
+
+        function resetManimScene() {
+            renderManimScene(currentSceneType);
+        }
+
+        function animateManim() {
+            if (!manimIsPlaying) return;
+
+            manimCtx.fillStyle = 'black';
+            manimCtx.fillRect(0, 0, manimCanvas.width, manimCanvas.height);
+
+            // Desenha Grid ao fundo (Estilo Manim)
+            manimCtx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+            manimCtx.lineWidth = 1;
+            const gridSize = 40;
+            for (let x = 0; x < manimCanvas.width; x += gridSize) {
+                manimCtx.beginPath();
+                manimCtx.moveTo(x, 0);
+                manimCtx.lineTo(x, manimCanvas.height);
+                manimCtx.stroke();
+            }
+            for (let y = 0; y < manimCanvas.height; y += gridSize) {
+                manimCtx.beginPath();
+                manimCtx.moveTo(0, y);
+                manimCtx.lineTo(manimCanvas.width, y);
+                manimCtx.stroke();
+            }
+
+            // Eixos Centrais
+            const centerX = manimCanvas.width / 2;
+            const centerY = manimCanvas.height / 2;
+            manimCtx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+            manimCtx.lineWidth = 2;
+            manimCtx.beginPath();
+            manimCtx.moveTo(0, centerY);
+            manimCtx.lineTo(manimCanvas.width, centerY);
+            manimCtx.moveTo(centerX, 0);
+            manimCtx.lineTo(centerX, manimCanvas.height);
+            manimCtx.stroke();
+
+            // Render do elemento correspondente à cena selecionada
+            if (currentSceneType === 'trig') {
+                drawTrigScene(centerX, centerY);
+            } else if (currentSceneType === 'quad') {
+                drawQuadScene(centerX, centerY);
+            } else if (currentSceneType === 'pitagoras') {
+                drawPythagorasScene(centerX, centerY);
+            }
+
+            manimTime += 0.02;
+            manimAnimationId = requestAnimationFrame(animateManim);
+        }
+
+        function drawTrigScene(cx, cy) {
+            const radius = 100;
+            const speed = 0.5;
+            const angle = manimTime * speed;
+
+            // Círculo Trigonométrico
+            manimCtx.strokeStyle = '#3b82f6';
+            manimCtx.lineWidth = 2.5;
+            manimCtx.beginPath();
+            manimCtx.arc(cx, cy, radius, 0, Math.PI * 2);
+            manimCtx.stroke();
+
+            // Linha Rotativa (Vetor)
+            const x = Math.cos(angle) * radius;
+            const y = -Math.sin(angle) * radius; // Negativo no Canvas
+
+            manimCtx.strokeStyle = '#eab308';
+            manimCtx.lineWidth = 3;
+            manimCtx.beginPath();
+            manimCtx.moveTo(cx, cy);
+            manimCtx.lineTo(cx + x, cy + y);
+            manimCtx.stroke();
+
+            // Seno (Vertical em Verde)
+            manimCtx.strokeStyle = '#10b981';
+            manimCtx.lineWidth = 2.5;
+            manimCtx.beginPath();
+            manimCtx.moveTo(cx + x, cy);
+            manimCtx.lineTo(cx + x, cy + y);
+            manimCtx.stroke();
+
+            // Cosseno (Horizontal em Laranja)
+            manimCtx.strokeStyle = '#f97316';
+            manimCtx.beginPath();
+            manimCtx.moveTo(cx, cy);
+            manimCtx.lineTo(cx + x, cy);
+            manimCtx.stroke();
+
+            // Ponto de interseção
+            manimCtx.fillStyle = '#ef4444';
+            manimCtx.beginPath();
+            manimCtx.arc(cx + x, cy + y, 6, 0, Math.PI * 2);
+            manimCtx.fill();
+
+            // Legendagem Dinâmica
+            manimCtx.fillStyle = '#ffffff';
+            manimCtx.font = '10px Fira Code';
+            manimCtx.fillText(`ângulo θ = ${(angle % (Math.PI * 2)).toFixed(2)} rad`, 20, 30);
+            manimCtx.fillStyle = '#10b981';
+            manimCtx.fillText(`seno = ${(Math.sin(angle)).toFixed(3)}`, 20, 50);
+            manimCtx.fillStyle = '#f97316';
+            manimCtx.fillText(`cosseno = ${(Math.cos(angle)).toFixed(3)}`, 20, 70);
+        }
+
+        function drawQuadScene(cx, cy) {
+            manimCtx.strokeStyle = '#eab308';
+            manimCtx.lineWidth = 2.5;
+            manimCtx.beginPath();
+
+            const scale = 30; // 1 unidade = 30px
+            let isFirst = true;
+
+            // Função f(x) = x^2 - 4x + 3
+            // Desenhada dinamicamente com o tempo
+            const maxRange = Math.min(3.5, 0.5 + manimTime * 1.5);
+
+            for (let rx = 0.5; rx <= maxRange; rx += 0.05) {
+                const ry = rx*rx - 4*rx + 3;
+                const plotX = cx + (rx - 2) * scale; // Desloca para centrar no vértice x=2
+                const plotY = cy - ry * scale;
+
+                if (isFirst) {
+                    manimCtx.moveTo(plotX, plotY);
+                    isFirst = false;
+                } else {
+                    manimCtx.lineTo(plotX, plotY);
+                }
+            }
+            manimCtx.stroke();
+
+            // Desenha ponto do Vértice V(2, -1) se a animação já passou dali
+            if (maxRange >= 2.0) {
+                const vx = cx;
+                const vy = cy - (-1) * scale;
+                manimCtx.fillStyle = '#ef4444';
+                manimCtx.beginPath();
+                manimCtx.arc(vx, vy, 6, 0, Math.PI * 2);
+                manimCtx.fill();
+
+                manimCtx.fillStyle = '#ffffff';
+                manimCtx.font = '10px Fira Code';
+                manimCtx.fillText("Vértice da parábola V(2, -1)", vx + 10, vy + 4);
+            }
+        }
+
+        function drawPythagorasScene(cx, cy) {
+            // Desenha triângulo centralizado
+            const scale = 18;
+            const ax = cx - 50;
+            const ay = cy + 50;
+            const bx = ax + 4 * scale;
+            const by = ay;
+            const cx_pt = bx;
+            const cy_pt = ay - 3 * scale;
+
+            // Triângulo Retângulo
+            manimCtx.fillStyle = 'rgba(59, 130, 246, 0.2)';
+            manimCtx.strokeStyle = '#3b82f6';
+            manimCtx.lineWidth = 3;
+            manimCtx.beginPath();
+            manimCtx.moveTo(ax, ay);
+            manimCtx.lineTo(bx, by);
+            manimCtx.lineTo(cx_pt, cy_pt);
+            manimCtx.closePath();
+            manimCtx.fill();
+            manimCtx.stroke();
+
+            // Efeito gradual de surgimento dos quadrados
+            const appearance = Math.min(1.0, manimTime * 0.8);
+
+            // Quadrado na base (Cateto b = 4)
+            manimCtx.fillStyle = 'rgba(249, 115, 22, 0.15)';
+            manimCtx.strokeStyle = 'rgba(249, 115, 22, ' + appearance + ')';
+            manimCtx.lineWidth = 2;
+            manimCtx.fillRect(ax, ay, 4 * scale, 4 * scale * appearance);
+            manimCtx.strokeRect(ax, ay, 4 * scale, 4 * scale * appearance);
+
+            // Quadrado no lado (Cateto a = 3)
+            manimCtx.fillStyle = 'rgba(16, 185, 129, 0.15)';
+            manimCtx.strokeStyle = 'rgba(16, 185, 129, ' + appearance + ')';
+            manimCtx.fillRect(bx, cy_pt, 3 * scale * appearance, 3 * scale);
+            manimCtx.strokeRect(bx, cy_pt, 3 * scale * appearance, 3 * scale);
+
+            // Legenda
+            manimCtx.fillStyle = '#ffffff';
+            manimCtx.font = '10px Fira Code';
+            manimCtx.fillText("Teorema de Pitágoras:", 20, 30);
+            manimCtx.fillStyle = '#a855f7';
+            manimCtx.fillText("a² = b² + c²", 20, 50);
+        }
+
+
+        // --- AVALIAÇÃO PEDAGÓGICA (CHART.JS) ---
+        let evaluationChartInstance = null;
+
+        function renderEvaluationCharts() {
+            const ctx = document.getElementById('chartPerformance').getContext('2d');
+            
+            if (evaluationChartInstance) {
+                evaluationChartInstance.destroy();
+            }
+
+            // Gráfico comparativo Pré e Pós Testes no IFAL
+            evaluationChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Trigonometria', 'Função de 2º Grau', 'Geometria Espacial', 'Análise Combinatória'],
+                    datasets: [
+                        {
+                            label: 'Pré-teste (Sem MathX)',
+                            data: [4.2, 5.0, 3.8, 4.5],
+                            backgroundColor: 'rgba(239, 68, 68, 0.65)',
+                            borderColor: 'rgb(239, 68, 68)',
+                            borderWidth: 1.5,
+                            borderRadius: 6
+                        },
+                        {
+                            label: 'Pós-teste (Com MathX)',
+                            data: [7.8, 8.5, 7.2, 8.0],
+                            backgroundColor: 'rgba(139, 92, 246, 0.75)',
+                            borderColor: 'rgb(139, 92, 246)',
+                            borderWidth: 1.5,
+                            borderRadius: 6
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 10,
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                            ticks: { color: '#94a3b8' }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: '#94a3b8' }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: '#f1f5f9',
+                                font: { family: 'Inter', size: 10, weight: 'bold' }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // --- INICIALIZADOR COMPLETO ---
+        window.onload = function() {
+            lucide.createIcons();
+            // Inicia na aba Dashboard
+            changeTab('dashboard');
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="h-full bg-slate-950">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MathX - Protótipo Multimodal PIBIC-EM IFAL</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        mathx: {
+                            50: '#f5f3ff',
+                            100: '#ede9fe',
+                            500: '#8b5cf6',
+                            600: '#7c3aed',
+                            700: '#6d28d9',
+                            900: '#4c1d95',
+                            accent: '#06b6d4'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .code-font { font-family: 'Fira Code', monospace; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.3); }
+        ::-webkit-scrollbar-thumb { background: rgba(139, 92, 246, 0.4); border-radius: 9999px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(139, 92, 246, 0.7); }
+    </style>
+</head>
+<body class="h-full flex flex-col overflow-hidden text-slate-100 bg-slate-950">
+    <div class="flex h-full w-full overflow-hidden">
+        
+        <!-- Sidebar -->
+        <aside class="hidden lg:flex flex-col w-80 bg-slate-900 border-r border-slate-800 shrink-0 z-30 justify-between">
+            <div>
+                <div class="p-6 border-b border-slate-800 flex items-center gap-3">
+                    <div class="bg-gradient-to-tr from-mathx-600 to-mathx-accent p-2.5 rounded-xl text-white flex items-center justify-center shadow-lg shadow-mathx-600/20">
+                        <i data-lucide="binary" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <h1 class="font-extrabold text-lg tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-mathx-50 to-mathx-accent">MATHX</h1>
+                        <span class="text-[10px] text-mathx-accent font-semibold tracking-widest uppercase">PIBIC-EM IFAL</span>
+                    </div>
+                </div>
+
+                <nav class="p-4 space-y-1.5">
+                    <button onclick="changeTab('dashboard')" id="btn-dashboard" class="nav-btn active flex items-center gap-3 w-full px-4 py-3 rounded-xl text-xs font-bold tracking-wide transition-all text-slate-400 hover:bg-slate-800/60 hover:text-white [&.active]:bg-mathx-700 [&.active]:text-white">
+                        <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
+                        Painel do Projeto
+                    </button>
+                    <button onclick="changeTab('teoria')" id="btn-teoria" class="nav-btn flex items-center gap-3 w-full px-4 py-3 rounded-xl text-xs font-bold tracking-wide transition-all text-slate-400 hover:bg-slate-800/60 hover:text-white [&.active]:bg-mathx-700 [&.active]:text-white">
+                        <i data-lucide="book-open" class="w-4 h-4"></i>
+                        Fundamentação Teórica
+                    </button>
+                    <button onclick="changeTab('metodologia')" id="btn-metodologia" class="nav-btn flex items-center gap-3 w-full px-4 py-3 rounded-xl text-xs font-bold tracking-wide transition-all text-slate-400 hover:bg-slate-800/60 hover:text-white [&.active]:bg-mathx-700 [&.active]:text-white">
+                        <i data-lucide="microscope" class="w-4 h-4"></i>
+                        Metodologia
+                    </button>
+                    <button onclick="changeTab('resultados')" id="btn-resultados" class="nav-btn flex items-center gap-3 w-full px-4 py-3 rounded-xl text-xs font-bold tracking-wide transition-all text-slate-400 hover:bg-slate-800/60 hover:text-white [&.active]:bg-mathx-700 [&.active]:text-white">
+                        <i data-lucide="line-chart" class="w-4 h-4"></i>
+                        Resultados Esperados
+                    </button>
+                </nav>
+            </div>
+
+            <!-- Equipe -->
+            <div class="p-4 m-4 rounded-xl bg-slate-950/60 border border-slate-800 space-y-3">
+                <div class="flex items-center gap-1.5 text-[10px] text-mathx-accent font-semibold uppercase tracking-wider">
+                    <i data-lucide="users" class="w-3.5 h-3.5"></i>
+                    Equipe Proponente
+                </div>
+                <div class="space-y-2 text-xs">
+                    <div>
+                        <p class="font-bold text-slate-200">José Henrique da S. Lopes</p>
+                        <p class="text-[10px] text-slate-500">2026318055 • 1A Informática</p>
+                    </div>
+                    <div>
+                        <p class="font-bold text-slate-200">João Guilherme C. Rodrigues</p>
+                        <p class="text-[10px] text-slate-500">2026319894 • 1A Informática</p>
+                    </div>
+                    <div>
+                        <p class="font-bold text-slate-200">Pedro Willisson da S. Alves</p>
+                        <p class="text-[10px] text-slate-500">2026319750 • 1A Informática</p>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Área Central -->
+        <div class="flex flex-col flex-1 min-w-0 bg-slate-950">
+            
+            <header class="h-16 border-b border-slate-800 flex items-center justify-between px-6 bg-slate-900/50">
+                <div class="flex items-center gap-3">
+                    <div class="flex items-center gap-2">
+                        <span class="bg-mathx-900/40 text-mathx-accent border border-mathx-700/30 px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest">
+                            IFAL Campus Maceió
+                        </span>
+                        <span class="text-slate-600 hidden sm:inline">|</span>
+                        <span class="text-xs text-slate-400 hidden sm:inline font-medium">PIBIC-EM • Pesquisa Científica & Tecnológica</span>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3">
+                    <div class="text-right hidden md:block">
+                        <p class="text-xs font-bold text-slate-300">Protótipo Experimental</p>
+                        <span class="text-[9px] text-mathx-accent font-semibold tracking-wider">v1.2 (Ano Letivo 2026)</span>
+                    </div>
+                    <div class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
+                </div>
+            </header>
+
+            <main class="flex-1 overflow-y-auto p-4 md:p-6" id="view-port">
+                
+                <!-- TAB 1: PAINEL DO PROJETO -->
+                <section id="tab-dashboard" class="space-y-6 block">
+                    <!-- Banner -->
+                    <div class="relative bg-gradient-to-r from-mathx-900 via-slate-900 to-indigo-950 rounded-2xl p-6 md:p-8 border border-mathx-700/20 overflow-hidden shadow-2xl">
+                        <div class="relative z-10 max-w-3xl space-y-3">
+                            <span class="inline-block bg-mathx-600/30 text-mathx-accent border border-mathx-500/40 text-[9px] font-bold px-3 py-1 rounded-full uppercase tracking-widest">
+                                Projeto Aprovado PIBIT-EM
+                            </span>
+                            <h2 class="text-xl md:text-2xl lg:text-3xl font-black leading-snug">
+                                MathX: Chatbot Inteligente Multimodal para Ensino de Matemática
+                            </h2>
+                            <p class="text-slate-300 text-xs md:text-sm leading-relaxed">
+                                O presente projeto propõe o desenvolvimento de um protótipo experimental de chatbot inteligente multimodal destinado ao suporte pedagógico de discentes do ensino médio integrado do IFAL na disciplina de matemática. O sistema fundamenta-se na integração de APIs de Inteligência Artificial, técnicas de Processamento de Linguagem Natural (PLN), Reconhecimento Óptico de Caracteres (OCR) e Visão Computacional para a interpretação de comandos em linguagem natural, imagens de exercícios e documentos em formato PDF.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Introdução -->
+                    <div class="bg-slate-900/40 border border-slate-800 rounded-2xl p-6 space-y-4">
+                        <div class="flex items-center gap-2 border-b border-slate-800 pb-3">
+                            <i data-lucide="info" class="text-mathx-accent w-5 h-5"></i>
+                            <h3 class="font-extrabold text-sm">Introdução e Justificativa</h3>
+                        </div>
+                        <p class="text-sm text-slate-300 leading-relaxed">
+                            A proficiência em matemática figura como um dos maiores desafios da educação básica brasileira. Segundo indicadores do PISA (2023), aproximadamente 73% dos estudantes brasileiros não atingem o nível básico de competência em matemática, situando-se significativamente abaixo da média dos países da OCDE. Tais dificuldades são acentuadas pelo elevado nível de abstração exigido por conteúdos como trigonometria e geometria analítica.
+                        </p>
+                        <p class="text-sm text-slate-300 leading-relaxed">
+                            Nesse panorama, as "tecnologias da inteligência" emergem como catalisadoras de novas formas de acesso ao saber (LÉVY, 2010). Este projeto visa desenvolver uma ferramenta multimodal capaz de transpor as barreiras da interpretação simbólica, oferecendo suporte imediato e visual para a superação de lacunas de aprendizagem no contexto do IFAL.
+                        </p>
+                    </div>
+
+                    <!-- Objetivos -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="bg-slate-900/40 border border-slate-800 rounded-2xl p-6 space-y-4">
+                            <div class="flex items-center gap-2 border-b border-slate-800 pb-3">
+                                <i data-lucide="target" class="text-mathx-accent w-5 h-5"></i>
+                                <h3 class="font-extrabold text-sm">Objetivo Geral</h3>
+                            </div>
+                            <p class="text-sm text-slate-300 leading-relaxed">
+                                Desenvolver e avaliar um protótipo experimental de chatbot inteligente multimodal (MathX) baseado em Inteligência Artificial, Processamento de Linguagem Natural, Visão Computacional (OCR) e animações gráficas (Manim), voltado ao suporte pedagógico e à mitigação de lacunas de aprendizagem de conteúdos matemáticos abstratos para estudantes do ensino médio integrado do IFAL.
+                            </p>
+                        </div>
+                        <div class="bg-slate-900/40 border border-slate-800 rounded-2xl p-6 space-y-4">
+                            <div class="flex items-center gap-2 border-b border-slate-800 pb-3">
+                                <i data-lucide="check-circle" class="text-mathx-accent w-5 h-5"></i>
+                                <h3 class="font-extrabold text-sm">Problema e Hipótese</h3>
+                            </div>
+                            <p class="text-sm text-slate-300 leading-relaxed">
+                                <strong class="text-white">Problema:</strong> De que maneira um protótipo experimental de chatbot inteligente multimodal pode auxiliar estudantes na compreensão de matemática via interpretação integrada de textos, imagens, documentos digitais e situações-problema?<br><br>
+                                <strong class="text-white">Hipótese:</strong> A utilização de um sistema multimodal contribui significativamente para a autonomia discente e interpretação lógica, pois a integração texto-imagem reduz a carga cognitiva de conteúdos abstratos.
+                            </p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- TAB 2: TEORIA -->
+                <section id="tab-teoria" class="hidden space-y-6">
+                    <div class="bg-slate-900/40 border border-slate-800 rounded-2xl p-6 space-y-4">
+                        <div class="flex items-center gap-2 border-b border-slate-800 pb-3">
+                            <i data-lucide="book-open" class="text-mathx-accent w-5 h-5"></i>
+                            <h3 class="font-extrabold text-sm">Fundamentação Teórica</h3>
+                        </div>
+                        <p class="text-sm text-slate-300 leading-relaxed">
+                            A fundamentação teórica deste projeto ampara-se na convergência entre a Inteligência Artificial (IA) e o desenvolvimento de Sistemas Tutores Inteligentes (ITS). A evolução da IA viabiliza a criação de ferramentas educacionais personalizadas, transicionando chatbots para mediadores pedagógicos autônomos (WINKLER; SÖLLNER, 2018).
+                        </p>
+                        <p class="text-sm text-slate-300 leading-relaxed">
+                            A mediação é operacionalizada por Modelos de Linguagem de Grande Escala (LLMs) e PLN. O processamento visual fundamenta-se na Visão Computacional, essencial para mitigar o alto nível de abstração.
+                        </p>
+                        <p class="text-sm text-slate-300 leading-relaxed">
+                            Segundo a teoria dos Registros de Representação Semiótica de Raymond Duval, a compreensão matemática exige a transição fluida entre diferentes registros (enunciado, fórmula algébrica, gráfico). O chatbot atua como facilitador dessa transição. A Teoria Cognitiva da Aprendizagem Multimídia de Richard Mayer postula que o aprendizado é mais profundo quando estímulos verbais e visuais são apresentados de forma simultânea.
+                        </p>
+                    </div>
+                </section>
+
+                <!-- TAB 3: METODOLOGIA -->
+                <section id="tab-metodologia" class="hidden space-y-6">
+                    <div class="bg-slate-900/40 border border-slate-800 rounded-2xl p-6 space-y-4">
+                        <div class="flex items-center gap-2 border-b border-slate-800 pb-3">
+                            <i data-lucide="microscope" class="text-mathx-accent w-5 h-5"></i>
+                            <h3 class="font-extrabold text-sm">Metodologia de Desenvolvimento</h3>
+                        </div>
+                        <p class="text-sm text-slate-300 leading-relaxed">
+                            A pesquisa adotará um caráter experimental e exploratório:
+                        </p>
+                        <ul class="list-disc pl-5 text-sm text-slate-300 space-y-2">
+                            <li><strong class="text-white">Planejamento e Arquitetura:</strong> O sistema será estruturado em Python sob o framework Flask, Streamlit ou Gradio. A inteligência lógica por LLMs e OCR via Tesseract (2026) e OpenCV.</li>
+                            <li><strong class="text-white">Fluxo de Funcionamento:</strong> Entrada de dados (texto/foto/PDF) → Pré-processamento visual → Extração OCR → Inferência lógica IA → Exposição da resolução → Recomendação de vídeos e animações Manim.</li>
+                            <li><strong class="text-white">Avaliação Pedagógica:</strong> Testes supervisionados no IFAL com questionários de sondagem, atividades comparativas e escalas de usabilidade.</li>
+                        </ul>
+                    </div>
+                </section>
+                
+                <!-- TAB 4: RESULTADOS -->
+                <section id="tab-resultados" class="hidden space-y-6">
+                    <div class="bg-slate-900/40 border border-slate-800 rounded-2xl p-6 space-y-4">
+                        <div class="flex items-center gap-2 border-b border-slate-800 pb-3">
+                            <i data-lucide="line-chart" class="text-mathx-accent w-5 h-5"></i>
+                            <h3 class="font-extrabold text-sm">Resultados Esperados</h3>
+                        </div>
+                        <ul class="list-disc pl-5 text-sm text-slate-300 space-y-4">
+                            <li><strong class="text-white">Entrega do Artefato Tecnológico (MathX):</strong> Disponibilização de um protótipo funcional de chatbot capaz de realizar com sucesso o processamento de imagens/PDFs e gerar respostas explicativas estruturadas e animações.</li>
+                            <li><strong class="text-white">Estímulo à Autonomia Discente:</strong> Espera-se que a ferramenta ajude os estudantes a superarem dificuldades em conteúdos de alta abstração, consolidando-os como protagonistas.</li>
+                            <li><strong class="text-white">Redução da Carga Cognitiva:</strong> A transição fluida entre enunciados, álgebra e gráficos (teorias de Duval e Mayer) facilitará a conversão de problemas complexos.</li>
+                            <li><strong class="text-white">Evidências Pedagógicas Quantitativas:</strong> Obtenção de dados empíricos demonstrando evolução positiva nas respostas corretas dos alunos após o uso.</li>
+                            <li><strong class="text-white">Validação de Usabilidade:</strong> Confirmação de indicadores satisfatórios de facilidade de uso após testes práticos.</li>
+                        </ul>
+                    </div>
+                </section>
+
+            </main>
+        </div>
+    </div>
+
+    <script>
+        function changeTab(tabId) {
+            document.querySelectorAll('section').forEach(el => {
+                el.classList.add('hidden');
+                el.classList.remove('block');
+            });
+            document.getElementById('tab-' + tabId).classList.remove('hidden');
+            document.getElementById('tab-' + tabId).classList.add('block');
+            
+            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById('btn-' + tabId).classList.add('active');
+        }
+        
+        window.onload = function() {
+            lucide.createIcons();
+            changeTab('dashboard');
+        }
+    </script>
+</body>
+</html>
